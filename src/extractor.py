@@ -27,15 +27,19 @@ def obtener_ids(cant_items: int) -> list:
     nos quedamos con n cantidad"""
     
     response = requests.get(f"{api}{end_point}").json()
-    logging.info(f"Se obtuvieron {cant_items} ids de los posts mas virales")
+    logging.info(f"Se obtuvieron {cant_items} ids: {response[:cant_items]}")
     return response[:cant_items]
 
 def obtener_item(id: int) -> json:
     """Recibe el id del post y retorna su infromación"""
     
-    response = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty")
-    logging.info(f"Obteniendo información del post con id: {id}...")
-    return response.json()
+    try:
+        response = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty")
+        logging.info(f"Información obtenida del post con id: {id}")
+        return response.json()
+    except requests.RequestException as e:
+        logging.error(f"Error al obtener información del post con id: {id}. Error: {e}")
+        return None
     
 def extraer(list_ids: list, cantidad: int) -> list:
     """Hace 10 gets por seg y de cada id recibe la
@@ -63,11 +67,10 @@ def guardar(items: list):
     with open("data/raw/items.json", "w", encoding="utf-8") as f:
         f.write(json.dumps(datos, indent=2))
         logging.info(f"Items guardados exitosamente en items.json. \nTotal de items: {len(datos)}.")
-        print("Items guardados:", json.dumps(items, indent=2))
         
 def main():
     ids = obtener_ids(10)
-    items = extraer(list_ids=ids, cantidad=1)
+    items = extraer(list_ids=ids, cantidad=10)
     guardar(items)
 
 main()
