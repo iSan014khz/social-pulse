@@ -3,6 +3,16 @@ from concurrent.futures import ThreadPoolExecutor
 import os
 import requests
 import json
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s — %(levelname)s — %(message)s",
+    handlers=[
+        logging.FileHandler("logs/extractor.log", encoding="utf-8"),  # guarda logs en un archivo
+        logging.StreamHandler()  # también muestra en terminal
+    ]
+)
 
 load_dotenv()
 
@@ -17,20 +27,23 @@ def obtener_ids(cant_items: int) -> list:
     nos quedamos con n cantidad"""
     
     response = requests.get(f"{api}{end_point}").json()
+    logging.info(f"Se obtuvieron {cant_items} ids de los posts mas virales")
     return response[:cant_items]
 
 def obtener_item(id: int) -> json:
     """Recibe el id del post y retorna su infromación"""
     
     response = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty")
+    logging.info(f"Obteniendo información del post con id: {id}...")
     return response.json()
     
 def extraer(list_ids: list, cantidad: int) -> list:
     """Hace 10 gets por seg y de cada id recibe la
     información del post"""
-    
+    logging.info(f"Extrayendo información de posts: {list_ids[:cantidad]}...")
     with ThreadPoolExecutor(max_workers=10) as executor:
         items = list(executor.map(obtener_item, list_ids[:cantidad]))
+        logging.info(f"Información de posts:{list_ids[:cantidad]} extraída exitosamente.")
     return items
 
 def leer_datos():
@@ -38,8 +51,10 @@ def leer_datos():
     renorta una lista vacía"""
     try:
         with open("data/raw/items.json", "r", encoding="utf-8") as f:
+            logging.info("Archivo items.json leído exitosamente.")
             return json.load(f)       
     except FileNotFoundError:
+        logging.warning("Archivo items.json no encontrado. Se creará uno nuevo.")
         return []
     
 def guardar(items: list):
@@ -47,6 +62,7 @@ def guardar(items: list):
     datos.extend(items)
     with open("data/raw/items.json", "w", encoding="utf-8") as f:
         f.write(json.dumps(datos, indent=2))
+        logging.info(f"Items guardados exitosamente en items.json. \nTotal de items: {len(datos)}.")
         print("Items guardados:", json.dumps(items, indent=2))
         
 def main():
