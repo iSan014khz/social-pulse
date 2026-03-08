@@ -34,9 +34,13 @@ def obtener_item(id: int) -> json:
     """Recibe el id del post y retorna su infromación"""
     
     try:
-        response = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty")
+        response = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty").json()
         logging.info(f"Información obtenida del post con id: {id}")
-        return response.json()
+        if response is None:
+            logging.warning(f"Item {id} no existe o fue eliminado.")
+            return None
+        return response
+    
     except requests.RequestException as e:
         logging.error(f"Error al obtener información del post con id: {id}. Error: {e}")
         return None
