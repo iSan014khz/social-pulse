@@ -15,14 +15,14 @@ logger.setLevel(logging.INFO)
 engine = create_engine("sqlite:///data/social_pulse.db")
 Base.metadata.create_all(engine)
 
-def leer_datos():
+def leer_limpios():
     try:
         with open("data/processed/items.json", "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         return []
 
-def cargar(items: list):
+def cargar_en_bd(items: list):
     with Session(engine) as session:
         for item in items:
 
@@ -59,7 +59,6 @@ def cargar(items: list):
             
 
 def main():
-    data = leer_datos()
-    cargar(items=data)
-
+    data = leer_limpios()
+    cargar_en_bd(items=data)
 main()
