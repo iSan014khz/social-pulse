@@ -5,14 +5,13 @@ import requests
 import json
 import logging
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s — %(levelname)s — %(message)s",
-    handlers=[
-        logging.FileHandler("logs/extractor.log", encoding="utf-8"),  # guarda logs en un archivo
-        logging.StreamHandler()  # también muestra en terminal
-    ]
-)
+logger = logging.getLogger("extractor")
+
+handler = logging.FileHandler("logs/extractor.log", encoding="utf-8")
+handler.setFormatter(logging.Formatter("%(asctime)s — %(levelname)s — %(message)s"))
+logger.addHandler(handler)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 load_dotenv()
 
@@ -27,7 +26,7 @@ def obtener_ids(cant_items: int) -> list:
     nos quedamos con n cantidad"""
     
     response = requests.get(f"{api}{end_point}").json()
-    logging.info(f"Se obtuvieron {cant_items} ids: {response[:cant_items]}")
+    logger.info(f"Se obtuvieron {cant_items} ids: {response[:cant_items]}")
     return response[:cant_items]
 
 def obtener_item(id: int) -> json:
@@ -35,23 +34,23 @@ def obtener_item(id: int) -> json:
     
     try:
         response = requests.get(f"https://hacker-news.firebaseio.com/v0/item/{id}.json?print=pretty").json()
-        logging.info(f"Información obtenida del post con id: {id}")
+        logger.info(f"Información obtenida del post con id: {id}")
         if response is None:
-            logging.warning(f"Item {id} no existe o fue eliminado.")
+            logger.warning(f"Item {id} no existe o fue eliminado.")
             return None
         return response
     
     except requests.RequestException as e:
-        logging.error(f"Error al obtener información del post con id: {id}. Error: {e}")
+        logger.error(f"Error al obtener información del post con id: {id}. Error: {e}")
         return None
     
 def extraer(list_ids: list, cantidad: int) -> list:
     """Hace 10 gets por seg y de cada id recibe la
     información del post"""
-    logging.info(f"Extrayendo información de posts: {list_ids[:cantidad]}...")
+    logger.info(f"Extrayendo información de posts: {list_ids[:cantidad]}...")
     with ThreadPoolExecutor(max_workers=10) as executor:
         items = list(executor.map(obtener_item, list_ids[:cantidad]))
-        logging.info(f"Información de posts:{list_ids[:cantidad]} extraída exitosamente.")
+        logger.info(f"Información de posts:{list_ids[:cantidad]} extraída exitosamente.")
     return items
 
 def leer_datos():
@@ -59,10 +58,10 @@ def leer_datos():
     renorta una lista vacía"""
     try:
         with open("data/raw/items.json", "r", encoding="utf-8") as f:
-            logging.info("Archivo items.json leído exitosamente.")
+            logger.info("Archivo items.json leído exitosamente.")
             return json.load(f)       
     except FileNotFoundError:
-        logging.warning("Archivo items.json no encontrado. Se creará uno nuevo.")
+        logger.warning("Archivo items.json no encontrado. Se creará uno nuevo.")
         return []
     
 def guardar(items: list):
@@ -70,7 +69,7 @@ def guardar(items: list):
     datos.extend(items)
     with open("data/raw/items.json", "w", encoding="utf-8") as f:
         f.write(json.dumps(datos, indent=2))
-        logging.info(f"Items guardados exitosamente en items.json. \nTotal de items: {len(datos)}.")
+        logger.info(f"Items guardados exitosamente en items.json. \nTotal de items: {len(datos)}.")
         
 def main():
     ids = obtener_ids(10)
