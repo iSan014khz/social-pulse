@@ -71,9 +71,11 @@ def horas_activas():
 @app.get("/autores/top")
 def top_autores():
     with Session(engine) as session:
-        autores = session.query(Autor.nombre, func.count(Post.id).label("cantidad_posts"))\
+        autores = session.query(Autor.nombre, func.count(Post.id_autor).label("cantidad_posts"))\
         .join(Autor, Post.id_autor == Autor.id)\
-        .group_by(Autor.id).limit(10).all()
+        .group_by(Autor.id)\
+        .order_by(desc("cantidad_posts"))\
+        .limit(10).all()
         
     return {
         "Top":[
