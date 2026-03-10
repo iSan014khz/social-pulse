@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Pulse Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0e0e11;
+            color: #e0e0f0;
+            padding: 24px;
+        }
+
+        h1 {
+            color: #7c6af7;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .card {
+            background: #17171c;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        h3 {
+            color: #a0a0c0;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Social Pulse Dashboard</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Top 10 Posts por Calificación</h3>
+            <canvas id="topPostsChart"></canvas>
+        </div>
+        <div class="card">
+            <h3>Posts más Comentados</h3>
+            <canvas id="comentadosChart"></canvas>
+        </div>
+        <div class="card">
+            <h3>Actividad por Hora del Día</h3>
+            <canvas id="horasChart"></canvas>
+        </div>
+        <div class="card">
+            <h3>Autores más Activos</h3>
+            <canvas id="autoresChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // async function fetchData(url) {
+        //     const response = await fetch(url);
+        //     return await response.json();
+        // }
+
+        function iniciarDashboard() {
+            fetch("/post/top10")
+                .then(data => data.json())
+                .then(data => {
+                    posts = data.top_10;
+                    console.log(posts);
+                    new Chart(document.getElementById("topPostsChart"), {
+                        type: "bar",
+                        data: {
+                            labels: posts.map(p => p.titulo),  // aquí van los títulos de los posts
+                            datasets: [{
+                                label: "Calificación",
+                                data: posts.map(p => p.calificación),  // aquí van los valores
+                                backgroundColor: "#7c6af7"
+                            }]
+                        },
+                        // aumentar dpi
+                        Options: {
+                            devicePixelRatio: 4,
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                })
+                .catch(error => console.error("Error al cargar posts:", error));
+
+            fetch("/post/top_coments")
+                .then(data => data.json())
+                .then(data => {
+                    posts = data.top_coments;
+                    console.log(posts);
+                    new Chart(document.getElementById("comentadosChart"), {
+                        type: "bar",
+                        data: {
+                            labels: posts.map(p => p.titulo),  // aquí van los títulos de los posts
+                            datasets: [{
+                                label: "Cantidad de Comentarios",
+                                data: posts.map(p => p.cant_comentarios),  // aquí van los valores
+                                backgroundColor: "#7c6af7"
+                            }]
+                        },
+                        Options: {
+                            devicePixelRatio: 2,
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                })
+                .catch(error => console.error("Error al cargar posts:", error));
+
+            fetch("/actividad/horas")
+                .then(data => data.json())
+                .then(data => {
+                    horas = data.Horas;
+                    console.log(horas);
+                    new Chart(document.getElementById("horasChart"), {
+                        type: "line",
+                        data: {
+                            labels: horas.map(h => h.Hora),  // aquí van las horas
+                            datasets: [{
+                                label: "Cantidad de Posts",
+                                data: horas.map(h => h.Cantidad_de_Posts),  // aquí van los valores
+                                backgroundColor: "#7c6af7",
+                                fill: false,
+                                borderColor: "#7c6af7"
+                            }]
+                        },
+                        Options: {
+                            devicePixelRatio: 2,
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                })
+            fetch("/autores/top")
+                .then(data => data.json())
+                .then(data => {
+                    autores = data.top_autores;
+                    console.log(autores);
+                    new Chart(document.getElementById("autoresChart"), {
+                        type: "bar",
+                        data: {
+                            labels: autores.map(a => a.autor),  // aquí van los nombres de los autores
+                            datasets: [{
+                                label: "Cantidad de Posts",
+                                data: autores.map(a => a.cantidad_posts),  // aquí van los valores
+                                backgroundColor: "#7c6af7"
+                            }]
+                        },
+                        Options: {
+                            devicePixelRatio: 2,
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                })
+                .catch(error => console.error("Error al cargar autores:", error));
+        }
+
+        iniciarDashboard();
+    </script>
+</body>
+
+</html>

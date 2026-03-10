@@ -6,26 +6,31 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from models import Base, Autor, Post
 from datetime import datetime
-
+from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 
 engine = create_engine("sqlite:///data/social_pulse.db")
 Base.metadata.create_all(engine)
 
-from fastapi import FastAPI
+
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {
-        "Bienvenido!": datetime.now(),
-    }
+
+# @app.get("/")
+# def home():
+#     try:
+#         with open("frontend/index.html", "r") as f:
+#             content = f.read()
+#         return content
+#     except Exception as e:
+#         return {"error": str(e)}
 
 @app.get("/post/top10")
 def top10_post():
     with Session(engine) as session:
         top10_post = session.query(Post).order_by(desc(Post.calificacion)).limit(10).all()
     return {
-        "top 10 post": [
+        "top_10": [
             {
                 "id":p.id, 
                 "titulo": p.title,
@@ -39,7 +44,7 @@ def top_coments():
     with Session(engine) as session:
         top_coments = session.query(Post).order_by(desc(Post.cant_coments)).limit(10).all()
     return {
-        "top 10 post": [
+        "top_coments": [
             {
                 "id":p.id, 
                 "titulo": p.title,
@@ -78,10 +83,12 @@ def top_autores():
         .limit(10).all()
         
     return {
-        "Top":[
+        "top_autores":[
             {
                 "autor": nombre,
                 "cantidad_posts": cantidad
             } for nombre, cantidad in autores
         ]
     }
+    
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
