@@ -11,7 +11,7 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 def main():
-    
+
         inicio = datetime.now()
         logger.info(f"Pipeline iniciado a las: {inicio}\n")
     
@@ -50,5 +50,6 @@ scheduler = BlockingScheduler()
 def trabajo():
     main()
 
-main()
-scheduler.start()
+if __name__ == "__main__":
+    main()
+    scheduler.start()
